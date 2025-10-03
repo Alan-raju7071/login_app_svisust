@@ -22,15 +22,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   if (_formKey.currentState!.validate()) {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    // Save user data
+
     await prefs.setString("name", nameController.text.trim());
     await prefs.setString("email", emailController.text.trim());
     await prefs.setString("password", passwordController.text.trim());
 
-    // Save session flag (optional, set to false so user must login)
+    
     await prefs.setBool("isLoggedIn", false);
 
-    // ✅ Navigate to LoginScreen after registration
+    
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),

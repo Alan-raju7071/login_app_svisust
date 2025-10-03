@@ -17,7 +17,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String? name;
   String? email;
-  String? imagePath; // store profile image path
+  String? imageBase64; 
   late Future<List<Product>> productsFuture;
 
   @override
@@ -32,7 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       name = prefs.getString("name") ?? "User";
       email = prefs.getString("email") ?? "example@email.com";
-      imagePath = prefs.getString("profileImage"); // load saved image
+      imageBase64 = prefs.getString("profileImage"); 
     });
   }
 
@@ -41,11 +41,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      final base64String = base64Encode(bytes);
+
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString("profileImage", pickedFile.path);
+      await prefs.setString("profileImage", base64String);
 
       setState(() {
-        imagePath = pickedFile.path;
+        imageBase64 = base64String;
       });
     }
   }
@@ -79,21 +82,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           const SizedBox(height: 20),
 
-          // 👤 Profile Image
-        GestureDetector(
-  onTap: _pickImage, // tap to change image
-  child: CircleAvatar(
-    radius: 50,
-    backgroundImage: imagePath != null ? FileImage(File(imagePath!)) : null,
-    child: imagePath == null
-        ? const Icon(Icons.person, size: 50)
-        : null,
-  ),
-),
-
+          
+          GestureDetector(
+            onTap: _pickImage,
+            child: CircleAvatar(
+              radius: 50,
+              backgroundImage: imageBase64 != null
+                  ? MemoryImage(base64Decode(imageBase64!))
+                  : null,
+              child: imageBase64 == null
+                  ? const Icon(Icons.person, size: 50)
+                  : null,
+            ),
+          ),
           const SizedBox(height: 10),
 
-          // Name & Email
+          
           Text(name ?? "",
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           Text(email ?? "",
@@ -109,7 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           const Divider(height: 30, thickness: 1),
 
-          // Products List
+        
           Expanded(
             child: FutureBuilder<List<Product>>(
               future: productsFuture,
@@ -124,19 +128,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 final products = snapshot.data!;
                 return ListView.separated(
-                  itemCount: products.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    return ListTile(
-                      leading: Image.network(product.image,
-                          width: 50, height: 50, fit: BoxFit.cover),
-                      title: Text(product.title,
-                          maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: Text("\$${product.price.toStringAsFixed(2)}"),
-                    );
-                  },
-                );
+  itemCount: products.length,
+  separatorBuilder: (_, __) => const Divider(height: 1),
+  itemBuilder: (context, index) {
+    final product = products[index];
+    return ListTile(
+      leading: GestureDetector(
+        onTap: () {
+    
+         setState(() {
+  productsFuture = fetchProducts();
+});
+
+        },
+        child: Image.network(
+          product.image,
+          width: 50,
+          height: 50,
+          fit: BoxFit.cover,
+        ),
+      ),
+      title: Text(product.title,
+          maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text("\$${product.price.toStringAsFixed(2)}"),
+    );
+  },
+);
+
               },
             ),
           ),

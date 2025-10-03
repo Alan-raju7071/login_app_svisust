@@ -22,24 +22,24 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      // Get stored values from registration
+      
       String? storedEmail = prefs.getString("email");
       String? storedPassword = prefs.getString("password");
       String? storedName = prefs.getString("name");
 
-      // Validate credentials
+  
       if (storedEmail == emailController.text.trim() &&
           storedPassword == passwordController.text.trim()) {
-        // Save login session
+    
         await prefs.setBool("isLoggedIn", true);
 
-        // Navigate to profile screen
+      
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const ProfileScreen()),
         );
       } else {
-        // Show error if credentials don't match
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Invalid email or password"),
